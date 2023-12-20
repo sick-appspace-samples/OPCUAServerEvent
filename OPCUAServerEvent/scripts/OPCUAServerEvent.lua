@@ -2,17 +2,16 @@
 --Start of Global Scope---------------------------------------------------------
 
 --Create OPC UA server instance
--- luacheck: globals gServer
-gServer = OPCUA.Server.create()
+Server = OPCUA.Server.create()
 --The server can be bound to a specific interface, using the following line.
---OPCUA.Server.setInterface(server, "ETH1")
-OPCUA.Server.setApplicationName(gServer, 'SampleOPCUAServer')
+--OPCUA.Server.setInterface(Server, "ETH1")
+OPCUA.Server.setApplicationName(Server, 'SampleOPCUAServer')
 
 --Creation of namespace and adding it the server.
 --Namespaces are organizing the address space.
 --Each server can have one or more user defined namespaces.
 local namespace = OPCUA.Server.Namespace.create()
-OPCUA.Server.setNamespaces(gServer, namespace)
+OPCUA.Server.setNamespaces(Server, namespace)
 --Every namespace has an index. 0 and 1 are reserved for OPC UA standard namespaces
 OPCUA.Server.Namespace.setIndex(namespace, 2)
 
@@ -44,24 +43,21 @@ OPCUA.Server.Node.addReference(rootNode, 'HAS_EVENT_SOURCE', objectNode)
 OPCUA.Server.Namespace.setNodes(namespace, allNodes)
 
 -- Starting the server
-OPCUA.Server.start(gServer)
+OPCUA.Server.start(Server)
 
 -- Creation of periodic timer and registration of "gGenerateEvent" function
 local i = 1
--- luacheck: globals gTimer
-gTimer = Timer.create()
-Timer.setExpirationTime(gTimer, 1000)
-Timer.setPeriodic(gTimer, true)
-Timer.register(gTimer, 'OnExpired', 'gGenerateEvent')
-Timer.start(gTimer)
+local timer = Timer.create()
+Timer.setExpirationTime(timer, 1000)
+Timer.setPeriodic(timer, true)
+Timer.start(timer)
 
 --End of Global Scope-----------------------------------------------------------
 
 --Start of Function and Event Scope---------------------------------------------
 
--- Function is called periodically by timer and increments sample variable
--- luacheck: globals gGenerateEvent
-function gGenerateEvent()
+---Function is called periodically by timer and increments sample variable
+local function generateEvent()
   local numberOfDummyMessageBytes = 10 --Dummy data which is inserted to the event message
   local message = 'Begin Message Event ' .. i .. ' ' ..
             string.rep('x', numberOfDummyMessageBytes) .. ' End Message Event ' .. i
@@ -70,5 +66,6 @@ function gGenerateEvent()
   print('Event number: ' .. i)
   i = i + 1
 end
+Timer.register(timer, 'OnExpired', generateEvent)
 
 --End of Function and Event Scope------------------------------------------------
